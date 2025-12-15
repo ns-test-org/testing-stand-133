@@ -2,83 +2,143 @@
 
 import { useEffect, useState } from 'react';
 
-const slogans = [
-  "Turn chats into apps",
-  "Prompt. Ship. Repeat.",
-  "Build anything from a chat",
-  "Ideas → Apps, instantly",
-  "From zero to MVP in minutes",
-  "Your cofounder in the command line",
-  "Draft, iterate, deploy",
-  "Ship faster than you can type",
-  "Design in text, deliver in code",
-  "Dream it. Prompt it. Run it.",
-  "Chat-native app building",
-  "From prompt to product",
-  "One prompt, infinite apps",
-  "Stop scaffolding. Start shipping.",
-  "Prototype at the speed of thought",
-  "Make conversations executable"
-];
+type Card = {
+  id: number;
+  value: string;
+  isFlipped: boolean;
+  isMatched: boolean;
+};
 
-export default function Landing() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isVisible, setIsVisible] = useState(true);
+const emojis = ['🎮', '🎯', '🎲', '🎪', '🎨', '🎭', '🎸', '🎹'];
 
+export default function MemoryGame() {
+  const [cards, setCards] = useState<Card[]>([]);
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  const [moves, setMoves] = useState(0);
+  const [isChecking, setIsChecking] = useState(false);
+  const [gameWon, setGameWon] = useState(false);
+
+  // Initialize game
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsVisible(false);
-      setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % slogans.length);
-        setIsVisible(true);
-      }, 400);
-    }, 2800);
-
-    return () => clearInterval(interval);
+    initializeGame();
   }, []);
 
+  const initializeGame = () => {
+    const cardPairs = [...emojis, ...emojis];
+    const shuffled = cardPairs
+      .map((value, index) => ({
+        id: index,
+        value,
+        isFlipped: false,
+        isMatched: false,
+      }))
+      .sort(() => Math.random() - 0.5);
+    
+    setCards(shuffled);
+    setFlippedCards([]);
+    setMoves(0);
+    setGameWon(false);
+  };
+
+  const handleCardClick = (id: number) => {
+    if (isChecking || flippedCards.length >= 2) return;
+    
+    const card = cards.find(c => c.id === id);
+    if (!card || card.isFlipped || card.isMatched) return;
+
+    const newFlipped = [...flippedCards, id];
+    setFlippedCards(newFlipped);
+    
+    setCards(cards.map(c => 
+      c.id === id ? { ...c, isFlipped: true } : c
+    ));
+
+    if (newFlipped.length === 2) {
+      setMoves(moves + 1);
+      setIsChecking(true);
+      
+      const [first, second] = newFlipped;
+      const firstCard = cards.find(c => c.id === first);
+      const secondCard = cards.find(c => c.id === second);
+
+      if (firstCard?.value === secondCard?.value) {
+        // Match found
+        setTimeout(() => {
+          setCards(cards.map(c => 
+            c.id === first || c.id === second 
+              ? { ...c, isMatched: true } 
+              : c
+          ));
+          setFlippedCards([]);
+          setIsChecking(false);
+          
+          // Check if game is won
+          const allMatched = cards.every(c => 
+            c.id === first || c.id === second || c.isMatched
+          );
+          if (allMatched) {
+            setGameWon(true);
+          }
+        }, 600);
+      } else {
+        // No match
+        setTimeout(() => {
+          setCards(cards.map(c => 
+            c.id === first || c.id === second 
+              ? { ...c, isFlipped: false } 
+              : c
+          ));
+          setFlippedCards([]);
+          setIsChecking(false);
+        }, 1000);
+      }
+    }
+  };
+
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-black text-white">
-      {/* Enhanced animated aurora background layers */}
-      <div className="absolute inset-0 bg-aurora-layer-1" />
-      <div className="absolute inset-0 bg-aurora-layer-2" />
-      <div className="absolute inset-0 bg-aurora-layer-3" />
-      
-      {/* Floating particles overlay */}
-      <div className="absolute inset-0 bg-particles" />
-      
-      {/* Main content - centered */}
-      <main className="relative z-10 h-full flex flex-col items-center justify-center px-6">
-        <h1 className="text-center text-[clamp(28px,6vw,64px)] font-medium tracking-tight mb-4">
-          Turn Chats into Apps
-        </h1>
-        
-        {/* Rotating slogans */}
-        <div className="mt-4 h-8 md:h-10 overflow-hidden flex items-center justify-center">
-          <span
-            className={`inline-block text-center text-[clamp(18px,3vw,32px)] font-light transition-all duration-[400ms] ease-in-out ${
-              isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2'
-            }`}
-          >
-            {slogans[currentIndex]}
-          </span>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <div className="max-w-2xl w-full">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl font-bold text-white mb-4">Memory Match</h1>
+          <div className="flex justify-center gap-8 text-white text-xl">
+            <div>Moves: <span className="font-bold">{moves}</span></div>
+            <button 
+              onClick={initializeGame}
+              className="px-6 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+            >
+              New Game
+            </button>
+          </div>
         </div>
-      </main>
-      
-      {/* Start Prompting arrow pointing left - bottom left */}
-      <div className="absolute left-6 md:left-8 bottom-[5%] z-20 flex items-center gap-3 arrow-point-left">
-        <div className="flex items-center gap-2 text-white/80 font-medium text-sm md:text-base">
-          <svg 
-            className="w-5 h-5 md:w-6 md:h-6 animate-bounce-horizontal" 
-            fill="none" 
-            viewBox="0 0 24 24" 
-            stroke="currentColor"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-          <span>Start prompting</span>
+
+        {gameWon && (
+          <div className="text-center mb-6 text-white text-2xl font-bold animate-bounce">
+            🎉 You Won in {moves} moves! 🎉
+          </div>
+        )}
+
+        <div className="grid grid-cols-4 gap-4">
+          {cards.map((card) => (
+            <button
+              key={card.id}
+              onClick={() => handleCardClick(card.id)}
+              disabled={isChecking || card.isMatched}
+              className={`aspect-square rounded-xl text-5xl flex items-center justify-center transition-all duration-300 transform ${
+                card.isFlipped || card.isMatched
+                  ? 'bg-white rotate-0'
+                  : 'bg-white/20 hover:bg-white/30 hover:scale-105'
+              } ${card.isMatched ? 'opacity-50' : ''}`}
+            >
+              {(card.isFlipped || card.isMatched) ? card.value : '?'}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-8 text-center text-white/80 text-sm">
+          Click cards to flip them. Match all pairs to win!
         </div>
       </div>
     </div>
   );
 }
+
