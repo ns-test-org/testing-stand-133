@@ -105,7 +105,7 @@ export default function MemoryGame() {
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
       <div className="max-w-2xl w-full">
         <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-4">Memory Match v2</h1>
+          <h1 className="text-5xl font-bold text-white mb-4">Memory Match v3</h1>
           <div className="flex justify-center gap-8 text-white text-xl">
             <div>Moves: <span className="font-bold">{moves}</span></div>
             <button 
@@ -171,6 +171,7 @@ export default function MemoryGame() {
     </div>
   );
 }
+
 
 
 
